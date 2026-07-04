@@ -19,6 +19,7 @@ export interface ChecklistItem {
 export interface Trainee {
   id: number
   name: string
+  note: string | null
   createdAt: string
 }
 
