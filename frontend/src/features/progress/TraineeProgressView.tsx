@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiGet, apiPatch } from '../../api/http'
+import { apiDelete, apiGet, apiPatch, apiPost } from '../../api/http'
 import type { ProgressItem, Trainee } from '../../types'
 import { CATEGORIES, CATEGORY_LABELS } from '../../types'
 import { DashboardView } from '../dashboard/DashboardView'
@@ -9,12 +9,17 @@ export function TraineeProgressView() {
   const [selectedTraineeId, setSelectedTraineeId] = useState<number | null>(null)
   const [progress, setProgress] = useState<ProgressItem[]>([])
   const [noteDraft, setNoteDraft] = useState('')
+  const [newName, setNewName] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const loadTrainees = () => {
     apiGet<Trainee[]>('/trainees')
       .then(setTrainees)
       .catch(() => setError('신입 목록을 불러오지 못했습니다.'))
+  }
+
+  useEffect(() => {
+    loadTrainees()
   }, [])
 
   const loadProgress = (traineeId: number) => {
@@ -27,6 +32,30 @@ export function TraineeProgressView() {
     setSelectedTraineeId(traineeId)
     setNoteDraft(trainees.find((t) => t.id === traineeId)?.note ?? '')
     loadProgress(traineeId)
+  }
+
+  const handleAddTrainee = async () => {
+    if (!newName.trim()) return
+    try {
+      await apiPost<Trainee>('/trainees', { name: newName.trim() })
+      setNewName('')
+      loadTrainees()
+    } catch {
+      setError('신입을 등록하지 못했습니다.')
+    }
+  }
+
+  const handleDeleteTrainee = async (traineeId: number) => {
+    try {
+      await apiDelete(`/trainees/${traineeId}`)
+      if (selectedTraineeId === traineeId) {
+        setSelectedTraineeId(null)
+        setProgress([])
+      }
+      loadTrainees()
+    } catch {
+      setError('신입을 삭제하지 못했습니다.')
+    }
   }
 
   const handleToggleItem = async (checklistItemId: number) => {
@@ -63,17 +92,32 @@ export function TraineeProgressView() {
         ) : (
           <ul className="item-list">
             {trainees.map((trainee) => (
-              <li key={trainee.id}>
+              <li key={trainee.id} className="roster-item">
                 <button
                   className={`roster-row${selectedTraineeId === trainee.id ? ' active' : ''}`}
                   onClick={() => handleSelectRow(trainee.id)}
                 >
                   <span>{trainee.name}</span>
                 </button>
+                <button className="btn-ghost" onClick={() => handleDeleteTrainee(trainee.id)}>
+                  삭제
+                </button>
               </li>
             ))}
           </ul>
         )}
+        <div className="field-row">
+          <input
+            className="text-input"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddTrainee()}
+            placeholder="신입 이름"
+          />
+          <button className="btn" onClick={handleAddTrainee}>
+            등록
+          </button>
+        </div>
       </div>
 
       {selectedTrainee && (
