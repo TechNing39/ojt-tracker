@@ -1,15 +1,44 @@
+import { useState } from 'react'
 import { ChecklistItems } from './features/checklist/ChecklistItems'
 import { TraineeProgressView } from './features/progress/TraineeProgressView'
 import { TraineeList } from './features/trainee/TraineeList'
 
+type Tab = 'progress' | 'trainees' | 'checklist'
+
+const TABS: { key: Tab; icon: string; label: string }[] = [
+  { key: 'progress', icon: '✅', label: '진행상황' },
+  { key: 'trainees', icon: '🧑', label: '신입 관리' },
+  { key: 'checklist', icon: '📋', label: '체크리스트' },
+]
+
 function App() {
+  const [tab, setTab] = useState<Tab>('progress')
+
   return (
-    <div>
-      <h1>OJT Tracker</h1>
-      <TraineeList />
-      <ChecklistItems />
-      <TraineeProgressView />
-    </div>
+    <>
+      <header className="app-header">
+        <h1>OJT Tracker</h1>
+      </header>
+
+      <main className="app-main">
+        {tab === 'progress' && <TraineeProgressView />}
+        {tab === 'trainees' && <TraineeList />}
+        {tab === 'checklist' && <ChecklistItems />}
+      </main>
+
+      <nav className="app-tabbar">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            className={`app-tab${tab === t.key ? ' active' : ''}`}
+            onClick={() => setTab(t.key)}
+          >
+            <span className="app-tab-icon">{t.icon}</span>
+            <span className="app-tab-label">{t.label}</span>
+          </button>
+        ))}
+      </nav>
+    </>
   )
 }
 

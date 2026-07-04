@@ -36,10 +36,11 @@ export function TraineeProgressView() {
   }
 
   return (
-    <section>
+    <div className="card">
       <h2>신입별 진행상황</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error-text">{error}</p>}
       <select
+        className="select-input"
         value={selectedTraineeId ?? ''}
         onChange={(e) => handleSelect(Number(e.target.value))}
       >
@@ -54,9 +55,12 @@ export function TraineeProgressView() {
       </select>
 
       {selectedTraineeId !== null && (
-        <ul>
+        <ul className="item-list" style={{ marginTop: 12 }}>
           {progress.map((item) => (
-            <li key={item.checklistItemId}>
+            <li
+              key={item.checklistItemId}
+              className={`item-row checkable${item.completed ? ' completed' : ''}`}
+            >
               <label>
                 <input
                   type="checkbox"
@@ -69,6 +73,6 @@ export function TraineeProgressView() {
           ))}
         </ul>
       )}
-    </section>
+    </div>
   )
 }

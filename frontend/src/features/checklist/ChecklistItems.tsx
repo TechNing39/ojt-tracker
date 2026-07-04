@@ -38,23 +38,35 @@ export function ChecklistItems() {
   }
 
   return (
-    <section>
+    <div className="card">
       <h2>체크리스트 항목</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <ul>
-        {items.map((item) => (
-          <li key={item.id}>
-            {item.title}
-            <button onClick={() => handleDelete(item.id)}>삭제</button>
-          </li>
-        ))}
-      </ul>
-      <input
-        value={newTitle}
-        onChange={(e) => setNewTitle(e.target.value)}
-        placeholder="새 체크리스트 항목"
-      />
-      <button onClick={handleAdd}>추가</button>
-    </section>
+      {error && <p className="error-text">{error}</p>}
+      {items.length === 0 ? (
+        <p className="empty-state">등록된 항목이 없습니다.</p>
+      ) : (
+        <ul className="item-list">
+          {items.map((item) => (
+            <li key={item.id} className="item-row">
+              {item.title}
+              <button className="btn-ghost" onClick={() => handleDelete(item.id)}>
+                삭제
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="field-row">
+        <input
+          className="text-input"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          placeholder="새 체크리스트 항목"
+        />
+        <button className="btn" onClick={handleAdd}>
+          추가
+        </button>
+      </div>
+    </div>
   )
 }
