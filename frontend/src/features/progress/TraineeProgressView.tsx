@@ -45,7 +45,8 @@ export function TraineeProgressView() {
     }
   }
 
-  const handleDeleteTrainee = async (traineeId: number) => {
+  const handleDeleteTrainee = async (traineeId: number, traineeName: string) => {
+    if (!window.confirm(`${traineeName}님을 삭제할까요? 진행상황 기록도 함께 사라지며 되돌릴 수 없습니다.`)) return
     try {
       await apiDelete(`/trainees/${traineeId}`)
       if (selectedTraineeId === traineeId) {
@@ -68,15 +69,15 @@ export function TraineeProgressView() {
     }
   }
 
-  const handleSaveNote = async () => {
+  useEffect(() => {
     if (selectedTraineeId === null) return
-    try {
-      const updated = await apiPatch<Trainee>(`/trainees/${selectedTraineeId}`, { note: noteDraft })
-      setTrainees((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
-    } catch {
-      setError('특이사항을 저장하지 못했습니다.')
-    }
-  }
+    const timeoutId = setTimeout(() => {
+      apiPatch<Trainee>(`/trainees/${selectedTraineeId}`, { note: noteDraft })
+        .then((updated) => setTrainees((prev) => prev.map((t) => (t.id === updated.id ? updated : t))))
+        .catch(() => setError('특이사항을 저장하지 못했습니다.'))
+    }, 600)
+    return () => clearTimeout(timeoutId)
+  }, [noteDraft, selectedTraineeId])
 
   const selectedTrainee = trainees.find((t) => t.id === selectedTraineeId) ?? null
 
@@ -99,7 +100,10 @@ export function TraineeProgressView() {
                 >
                   <span>{trainee.name}</span>
                 </button>
-                <button className="btn-ghost" onClick={() => handleDeleteTrainee(trainee.id)}>
+                <button
+                  className="btn-ghost"
+                  onClick={() => handleDeleteTrainee(trainee.id, trainee.name)}
+                >
                   삭제
                 </button>
               </li>
@@ -119,6 +123,12 @@ export function TraineeProgressView() {
           </button>
         </div>
       </div>
+
+      {trainees.length > 0 && !selectedTrainee && (
+        <div className="card">
+          <p className="empty-state">위 명단에서 신입을 선택하세요.</p>
+        </div>
+      )}
 
       {selectedTrainee && (
         <div className="card">
@@ -156,12 +166,9 @@ export function TraineeProgressView() {
               className="text-input note-textarea"
               value={noteDraft}
               onChange={(e) => setNoteDraft(e.target.value)}
-              placeholder="이 신입에 대한 특이사항을 적어주세요"
+              placeholder="이 신입에 대한 특이사항을 적어주세요 (자동 저장됩니다)"
               rows={3}
             />
-            <button className="btn" style={{ marginTop: 8 }} onClick={handleSaveNote}>
-              저장
-            </button>
           </div>
         </div>
       )}
