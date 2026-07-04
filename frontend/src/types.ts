@@ -1,12 +1,13 @@
-export type Category = 'FLOOR' | 'CONCESSION' | 'TICKETING' | 'CLOSING'
+export type Category = 'FLOOR' | 'CONCESSION' | 'TICKETING' | 'CLOSING' | 'TWOSOME'
 
-export const CATEGORIES: Category[] = ['FLOOR', 'CONCESSION', 'TICKETING', 'CLOSING']
+export const CATEGORIES: Category[] = ['FLOOR', 'CONCESSION', 'TICKETING', 'CLOSING', 'TWOSOME']
 
 export const CATEGORY_LABELS: Record<Category, string> = {
   FLOOR: '플로어',
   CONCESSION: '매점',
   TICKETING: '매표',
   CLOSING: '마감',
+  TWOSOME: '투썸',
 }
 
 export interface ChecklistItem {
