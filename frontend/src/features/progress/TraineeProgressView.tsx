@@ -12,6 +12,18 @@ export function TraineeProgressView() {
   const [newName, setNewName] = useState('')
   const [error, setError] = useState<string | null>(null)
 
+  const loadProgress = (traineeId: number) => {
+    apiGet<ProgressItem[]>(`/trainees/${traineeId}/progress`)
+      .then(setProgress)
+      .catch(() => setError('진행상황을 불러오지 못했습니다.'))
+  }
+
+  const handleSelectRow = (traineeId: number, trainee?: Trainee) => {
+    setSelectedTraineeId(traineeId)
+    setNoteDraft((trainee ?? trainees.find((t) => t.id === traineeId))?.note ?? '')
+    loadProgress(traineeId)
+  }
+
   const loadTrainees = () => {
     apiGet<Trainee[]>('/trainees')
       .then(setTrainees)
@@ -19,20 +31,16 @@ export function TraineeProgressView() {
   }
 
   useEffect(() => {
-    loadTrainees()
+    apiGet<Trainee[]>('/trainees')
+      .then((data) => {
+        setTrainees(data)
+        if (data.length > 0) {
+          handleSelectRow(data[0].id, data[0])
+        }
+      })
+      .catch(() => setError('신입 목록을 불러오지 못했습니다.'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  const loadProgress = (traineeId: number) => {
-    apiGet<ProgressItem[]>(`/trainees/${traineeId}/progress`)
-      .then(setProgress)
-      .catch(() => setError('진행상황을 불러오지 못했습니다.'))
-  }
-
-  const handleSelectRow = (traineeId: number) => {
-    setSelectedTraineeId(traineeId)
-    setNoteDraft(trainees.find((t) => t.id === traineeId)?.note ?? '')
-    loadProgress(traineeId)
-  }
 
   const handleAddTrainee = async () => {
     if (!newName.trim()) return
