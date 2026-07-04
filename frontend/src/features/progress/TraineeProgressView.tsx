@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiGet, apiPatch } from '../../api/http'
 import type { ProgressItem, Trainee } from '../../types'
 import { CATEGORIES, CATEGORY_LABELS } from '../../types'
+import { DashboardView } from '../dashboard/DashboardView'
 
 export function TraineeProgressView() {
   const [trainees, setTrainees] = useState<Trainee[]>([])
@@ -22,13 +23,13 @@ export function TraineeProgressView() {
       .catch(() => setError('진행상황을 불러오지 못했습니다.'))
   }
 
-  const handleSelect = (traineeId: number) => {
+  const handleSelectRow = (traineeId: number) => {
     setSelectedTraineeId(traineeId)
     setNoteDraft(trainees.find((t) => t.id === traineeId)?.note ?? '')
     loadProgress(traineeId)
   }
 
-  const handleToggle = async (checklistItemId: number) => {
+  const handleToggleItem = async (checklistItemId: number) => {
     if (selectedTraineeId === null) return
     try {
       await apiPatch(`/trainees/${selectedTraineeId}/progress/${checklistItemId}`)
@@ -48,27 +49,36 @@ export function TraineeProgressView() {
     }
   }
 
-  return (
-    <div className="card">
-      <h2>신입별 진행상황</h2>
-      {error && <p className="error-text">{error}</p>}
-      <select
-        className="select-input"
-        value={selectedTraineeId ?? ''}
-        onChange={(e) => handleSelect(Number(e.target.value))}
-      >
-        <option value="" disabled>
-          신입 선택
-        </option>
-        {trainees.map((trainee) => (
-          <option key={trainee.id} value={trainee.id}>
-            {trainee.name}
-          </option>
-        ))}
-      </select>
+  const selectedTrainee = trainees.find((t) => t.id === selectedTraineeId) ?? null
 
-      {selectedTraineeId !== null && (
-        <>
+  return (
+    <>
+      <DashboardView />
+
+      <div className="card">
+        <h2>신입 명단</h2>
+        {error && <p className="error-text">{error}</p>}
+        {trainees.length === 0 ? (
+          <p className="empty-state">아직 등록된 신입이 없습니다.</p>
+        ) : (
+          <ul className="item-list">
+            {trainees.map((trainee) => (
+              <li key={trainee.id}>
+                <button
+                  className={`roster-row${selectedTraineeId === trainee.id ? ' active' : ''}`}
+                  onClick={() => handleSelectRow(trainee.id)}
+                >
+                  <span>{trainee.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {selectedTrainee && (
+        <div className="card">
+          <h2>{selectedTrainee.name}님 진행상황</h2>
           {CATEGORIES.map((category) => {
             const categoryItems = progress.filter((item) => item.category === category)
             if (categoryItems.length === 0) return null
@@ -85,7 +95,7 @@ export function TraineeProgressView() {
                         <input
                           type="checkbox"
                           checked={item.completed}
-                          onChange={() => handleToggle(item.checklistItemId)}
+                          onChange={() => handleToggleItem(item.checklistItemId)}
                         />
                         {item.title}
                       </label>
@@ -109,8 +119,8 @@ export function TraineeProgressView() {
               저장
             </button>
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </>
   )
 }

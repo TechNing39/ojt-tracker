@@ -30,3 +30,16 @@ export interface ProgressItem {
   completed: boolean
   completedAt: string | null
 }
+
+export interface CategoryCount {
+  completed: number
+  total: number
+}
+
+export interface TraineeSummary {
+  traineeId: number
+  traineeName: string
+  completedTotal: number
+  totalItems: number
+  byCategory: Record<Category, CategoryCount>
+}
