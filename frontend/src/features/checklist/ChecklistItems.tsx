@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { apiDelete, apiGet, apiPost } from '../../api/http'
-import type { ChecklistItem } from '../../types'
+import type { Category, ChecklistItem } from '../../types'
+import { CATEGORIES, CATEGORY_LABELS } from '../../types'
 
 export function ChecklistItems() {
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [newTitle, setNewTitle] = useState('')
+  const [newCategory, setNewCategory] = useState<Category>('FLOOR')
   const [error, setError] = useState<string | null>(null)
 
   const loadItems = () => {
@@ -20,7 +22,10 @@ export function ChecklistItems() {
   const handleAdd = async () => {
     if (!newTitle.trim()) return
     try {
-      await apiPost<ChecklistItem>('/checklist-items', { title: newTitle.trim() })
+      await apiPost<ChecklistItem>('/checklist-items', {
+        title: newTitle.trim(),
+        category: newCategory,
+      })
       setNewTitle('')
       loadItems()
     } catch {
@@ -44,18 +49,39 @@ export function ChecklistItems() {
       {items.length === 0 ? (
         <p className="empty-state">등록된 항목이 없습니다.</p>
       ) : (
-        <ul className="item-list">
-          {items.map((item) => (
-            <li key={item.id} className="item-row">
-              {item.title}
-              <button className="btn-ghost" onClick={() => handleDelete(item.id)}>
-                삭제
-              </button>
-            </li>
-          ))}
-        </ul>
+        CATEGORIES.map((category) => {
+          const categoryItems = items.filter((item) => item.category === category)
+          if (categoryItems.length === 0) return null
+          return (
+            <div key={category} className="category-group">
+              <h3 className="category-heading">{CATEGORY_LABELS[category]}</h3>
+              <ul className="item-list">
+                {categoryItems.map((item) => (
+                  <li key={item.id} className="item-row">
+                    {item.title}
+                    <button className="btn-ghost" onClick={() => handleDelete(item.id)}>
+                      삭제
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        })
       )}
-      <div className="field-row">
+      <div className="field-row" style={{ flexWrap: 'wrap' }}>
+        <select
+          className="select-input"
+          style={{ flex: '0 0 100px' }}
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value as Category)}
+        >
+          {CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {CATEGORY_LABELS[category]}
+            </option>
+          ))}
+        </select>
         <input
           className="text-input"
           value={newTitle}

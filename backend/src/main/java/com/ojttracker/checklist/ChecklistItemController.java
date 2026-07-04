@@ -27,7 +27,7 @@ public class ChecklistItemController {
         return repository.findAll();
     }
 
-    public record CreateChecklistItemRequest(String title) {
+    public record CreateChecklistItemRequest(String title, Category category) {
     }
 
     @PostMapping
@@ -35,7 +35,10 @@ public class ChecklistItemController {
         if (request.title() == null || request.title().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("message", "title은 필수입니다."));
         }
-        ChecklistItem saved = repository.save(new ChecklistItem(request.title()));
+        if (request.category() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "category는 필수입니다."));
+        }
+        ChecklistItem saved = repository.save(new ChecklistItem(request.title(), request.category()));
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiGet, apiPatch } from '../../api/http'
 import type { ProgressItem, Trainee } from '../../types'
+import { CATEGORIES, CATEGORY_LABELS } from '../../types'
 
 export function TraineeProgressView() {
   const [trainees, setTrainees] = useState<Trainee[]>([])
@@ -54,25 +55,33 @@ export function TraineeProgressView() {
         ))}
       </select>
 
-      {selectedTraineeId !== null && (
-        <ul className="item-list" style={{ marginTop: 12 }}>
-          {progress.map((item) => (
-            <li
-              key={item.checklistItemId}
-              className={`item-row checkable${item.completed ? ' completed' : ''}`}
-            >
-              <label>
-                <input
-                  type="checkbox"
-                  checked={item.completed}
-                  onChange={() => handleToggle(item.checklistItemId)}
-                />
-                {item.title}
-              </label>
-            </li>
-          ))}
-        </ul>
-      )}
+      {selectedTraineeId !== null &&
+        CATEGORIES.map((category) => {
+          const categoryItems = progress.filter((item) => item.category === category)
+          if (categoryItems.length === 0) return null
+          return (
+            <div key={category} className="category-group">
+              <h3 className="category-heading">{CATEGORY_LABELS[category]}</h3>
+              <ul className="item-list">
+                {categoryItems.map((item) => (
+                  <li
+                    key={item.checklistItemId}
+                    className={`item-row checkable${item.completed ? ' completed' : ''}`}
+                  >
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={item.completed}
+                        onChange={() => handleToggle(item.checklistItemId)}
+                      />
+                      {item.title}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        })}
     </div>
   )
 }

@@ -44,7 +44,7 @@ public class TraineeProgressController {
                     TraineeProgress progress = progressByItemId.get(item.getId());
                     boolean completed = progress != null && progress.isCompleted();
                     var completedAt = progress != null ? progress.getCompletedAt() : null;
-                    return new ProgressItemView(item.getId(), item.getTitle(), completed, completedAt);
+                    return new ProgressItemView(item.getId(), item.getTitle(), item.getCategory(), completed, completedAt);
                 })
                 .toList();
 
