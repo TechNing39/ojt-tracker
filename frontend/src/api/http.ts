@@ -21,8 +21,14 @@ export async function apiDelete(path: string): Promise<void> {
   if (!res.ok && res.status !== 404) throw new Error(`DELETE ${path} failed: ${res.status}`)
 }
 
-export async function apiPatch<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, { method: 'PATCH' })
+export async function apiPatch<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'PATCH',
+    ...(body !== undefined && {
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  })
   if (!res.ok) throw new Error(`PATCH ${path} failed: ${res.status}`)
   return res.json()
 }

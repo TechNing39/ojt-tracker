@@ -199,6 +199,12 @@ input {
   width: 100%;
 }
 
+.note-textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+}
+
 .btn {
   padding: 10px 16px;
   border: none;

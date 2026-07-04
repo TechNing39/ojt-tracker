@@ -1,5 +1,6 @@
 package com.ojttracker.trainee;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,6 +15,9 @@ public class Trainee {
     private Long id;
 
     private String name;
+
+    @Column(columnDefinition = "TEXT")
+    private String note;
 
     private Instant createdAt;
 
@@ -31,6 +35,14 @@ public class Trainee {
 
     public String getName() {
         return name;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public Instant getCreatedAt() {

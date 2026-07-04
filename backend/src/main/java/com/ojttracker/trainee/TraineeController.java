@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,6 +42,19 @@ public class TraineeController {
         }
         Trainee saved = repository.save(new Trainee(request.name()));
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    public record UpdateNoteRequest(String note) {
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateNote(@PathVariable Long id, @RequestBody UpdateNoteRequest request) {
+        return repository.findById(id)
+                .map(trainee -> {
+                    trainee.setNote(request.note());
+                    return ResponseEntity.ok(repository.save(trainee));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
