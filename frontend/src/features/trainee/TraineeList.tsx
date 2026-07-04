@@ -29,20 +29,32 @@ export function TraineeList() {
   }
 
   return (
-    <section>
+    <div className="card">
       <h2>신입 목록</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <ul>
-        {trainees.map((trainee) => (
-          <li key={trainee.id}>{trainee.name}</li>
-        ))}
-      </ul>
-      <input
-        value={newName}
-        onChange={(e) => setNewName(e.target.value)}
-        placeholder="신입 이름"
-      />
-      <button onClick={handleAdd}>등록</button>
-    </section>
+      {error && <p className="error-text">{error}</p>}
+      {trainees.length === 0 ? (
+        <p className="empty-state">아직 등록된 신입이 없습니다.</p>
+      ) : (
+        <ul className="item-list">
+          {trainees.map((trainee) => (
+            <li key={trainee.id} className="item-row">
+              {trainee.name}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="field-row">
+        <input
+          className="text-input"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          placeholder="신입 이름"
+        />
+        <button className="btn" onClick={handleAdd}>
+          등록
+        </button>
+      </div>
+    </div>
   )
 }
