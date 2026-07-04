@@ -4,5 +4,6 @@ public enum Category {
     FLOOR,
     CONCESSION,
     TICKETING,
-    CLOSING
+    CLOSING,
+    TWOSOME
 }
