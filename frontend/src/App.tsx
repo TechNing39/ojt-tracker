@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { ChecklistItems } from './features/checklist/ChecklistItems'
 import { TraineeProgressView } from './features/progress/TraineeProgressView'
-import { TraineeList } from './features/trainee/TraineeList'
 
-type Tab = 'progress' | 'trainees' | 'checklist'
+type Tab = 'progress' | 'checklist'
 
 const TABS: { key: Tab; icon: string; label: string }[] = [
   { key: 'progress', icon: '✅', label: '진행상황' },
-  { key: 'trainees', icon: '🧑', label: '신입 관리' },
   { key: 'checklist', icon: '📋', label: '체크리스트' },
 ]
 
@@ -22,7 +20,6 @@ function App() {
 
       <main className="app-main">
         {tab === 'progress' && <TraineeProgressView />}
-        {tab === 'trainees' && <TraineeList />}
         {tab === 'checklist' && <ChecklistItems />}
       </main>
 

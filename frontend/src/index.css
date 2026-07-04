@@ -264,10 +264,17 @@ input {
 
 /* Trainee roster */
 
+.roster-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .roster-row {
   display: flex;
   align-items: center;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 10px 12px;
   background: var(--bg);
   border: 1px solid var(--border);
