@@ -33,7 +33,8 @@ export function ChecklistItems() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number, title: string) => {
+    if (!window.confirm(`"${title}" 항목을 삭제할까요?`)) return
     try {
       await apiDelete(`/checklist-items/${id}`)
       loadItems()
@@ -59,7 +60,7 @@ export function ChecklistItems() {
                 {categoryItems.map((item) => (
                   <li key={item.id} className="item-row">
                     {item.title}
-                    <button className="btn-ghost" onClick={() => handleDelete(item.id)}>
+                    <button className="btn-ghost" onClick={() => handleDelete(item.id, item.title)}>
                       삭제
                     </button>
                   </li>
