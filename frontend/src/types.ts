@@ -9,3 +9,10 @@ export interface Trainee {
   name: string
   createdAt: string
 }
+
+export interface ProgressItem {
+  checklistItemId: number
+  title: string
+  completed: boolean
+  completedAt: string | null
+}
