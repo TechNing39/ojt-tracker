@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiGet, apiPost } from '../../api/http'
+import { apiDelete, apiGet, apiPost } from '../../api/http'
 import type { Trainee } from '../../types'
 
 export function TraineeList() {
@@ -28,6 +28,15 @@ export function TraineeList() {
     }
   }
 
+  const handleDelete = async (id: number) => {
+    try {
+      await apiDelete(`/trainees/${id}`)
+      loadTrainees()
+    } catch {
+      setError('신입을 삭제하지 못했습니다.')
+    }
+  }
+
   return (
     <div className="card">
       <h2>신입 목록</h2>
@@ -39,6 +48,9 @@ export function TraineeList() {
           {trainees.map((trainee) => (
             <li key={trainee.id} className="item-row">
               {trainee.name}
+              <button className="btn-ghost" onClick={() => handleDelete(trainee.id)}>
+                삭제
+              </button>
             </li>
           ))}
         </ul>

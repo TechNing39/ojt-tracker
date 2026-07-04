@@ -9,4 +9,6 @@ public interface TraineeProgressRepository extends JpaRepository<TraineeProgress
     List<TraineeProgress> findByTraineeId(Long traineeId);
 
     Optional<TraineeProgress> findByTraineeIdAndChecklistItemId(Long traineeId, Long checklistItemId);
+
+    void deleteByTraineeId(Long traineeId);
 }
