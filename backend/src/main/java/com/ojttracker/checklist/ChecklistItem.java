@@ -53,10 +53,6 @@ public class ChecklistItem {
         this.title = title;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
     public Integer getSortOrder() {
         return sortOrder;
     }
