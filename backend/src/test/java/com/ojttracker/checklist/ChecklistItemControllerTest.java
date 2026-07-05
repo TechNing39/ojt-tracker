@@ -83,6 +83,44 @@ class ChecklistItemControllerTest {
     }
 
     @Test
+    void reorderChecklistItemsWithinCategory() throws Exception {
+        Long first = createItem("첫번째", "TICKETING");
+        Long second = createItem("두번째", "TICKETING");
+        Long third = createItem("세번째", "TICKETING");
+
+        mockMvc.perform(patch("/api/checklist-items/reorder")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                "{\"category\":\"TICKETING\",\"orderedIds\":[" + third + "," + first + "," + second
+                                        + "]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(third))
+                .andExpect(jsonPath("$[1].id").value(first))
+                .andExpect(jsonPath("$[2].id").value(second));
+    }
+
+    @Test
+    void reorderWithMismatchedIdsReturns400() throws Exception {
+        createItem("첫번째", "CLOSING");
+        createItem("두번째", "CLOSING");
+
+        mockMvc.perform(patch("/api/checklist-items/reorder")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"category\":\"CLOSING\",\"orderedIds\":[999999]}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    private Long createItem(String title, String category) throws Exception {
+        String response = mockMvc.perform(post("/api/checklist-items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"" + title + "\",\"category\":\"" + category + "\"}"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.parse(response).read("$.id", Long.class);
+    }
+
+    @Test
     void deleteChecklistItem() throws Exception {
         String response = mockMvc.perform(post("/api/checklist-items")
                         .contentType(MediaType.APPLICATION_JSON)

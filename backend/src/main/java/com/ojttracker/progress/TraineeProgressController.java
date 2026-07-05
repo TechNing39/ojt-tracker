@@ -35,7 +35,7 @@ public class TraineeProgressController {
             return ResponseEntity.notFound().build();
         }
 
-        List<ChecklistItem> items = checklistItemRepository.findAll();
+        List<ChecklistItem> items = checklistItemRepository.findAllSorted();
         Map<Long, TraineeProgress> progressByItemId = progressRepository.findByTraineeId(traineeId).stream()
                 .collect(java.util.stream.Collectors.toMap(TraineeProgress::getChecklistItemId, p -> p));
 

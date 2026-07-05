@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../../api/http'
 import type { Category, ChecklistItem } from '../../types'
 import { CATEGORIES, CATEGORY_LABELS } from '../../types'
@@ -11,6 +12,9 @@ export function ChecklistItems() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editCategory, setEditCategory] = useState<Category>('FLOOR')
+  const [dragCategory, setDragCategory] = useState<Category | null>(null)
+  const [dragOrder, setDragOrder] = useState<number[]>([])
+  const [draggingId, setDraggingId] = useState<number | null>(null)
 
   const loadItems = () => {
     apiGet<ChecklistItem[]>('/checklist-items')
@@ -70,6 +74,53 @@ export function ChecklistItems() {
     }
   }
 
+  const handleDragStart = (
+    e: ReactPointerEvent<HTMLSpanElement>,
+    item: ChecklistItem,
+    categoryItems: ChecklistItem[],
+  ) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setDragCategory(item.category)
+    setDragOrder(categoryItems.map((i) => i.id))
+    setDraggingId(item.id)
+  }
+
+  const handleDragMove = (e: ReactPointerEvent<HTMLSpanElement>) => {
+    if (draggingId === null) return
+    const target = document.elementFromPoint(e.clientX, e.clientY)
+    const row = target?.closest('[data-item-id]') as HTMLElement | null
+    if (!row) return
+    const hoveredId = Number(row.dataset.itemId)
+    if (hoveredId === draggingId) return
+    setDragOrder((prev) => {
+      const targetIndex = prev.indexOf(hoveredId)
+      if (targetIndex === -1) return prev
+      const next = prev.filter((id) => id !== draggingId)
+      next.splice(targetIndex, 0, draggingId)
+      return next
+    })
+  }
+
+  const handleDragEnd = async () => {
+    if (draggingId === null || dragCategory === null) {
+      setDraggingId(null)
+      return
+    }
+    const category = dragCategory
+    const orderedIds = dragOrder
+    setDraggingId(null)
+    setDragCategory(null)
+    setDragOrder([])
+    try {
+      await apiPatch('/checklist-items/reorder', { category, orderedIds })
+      loadItems()
+    } catch {
+      setError('순서를 변경하지 못했습니다.')
+      loadItems()
+    }
+  }
+
   return (
     <div className="card">
       <h2>체크리스트 항목</h2>
@@ -80,11 +131,17 @@ export function ChecklistItems() {
         CATEGORIES.map((category) => {
           const categoryItems = items.filter((item) => item.category === category)
           if (categoryItems.length === 0) return null
+          const displayItems =
+            dragCategory === category
+              ? (dragOrder
+                  .map((id) => categoryItems.find((item) => item.id === id))
+                  .filter((item): item is ChecklistItem => item !== undefined))
+              : categoryItems
           return (
             <div key={category} className="category-group">
               <h3 className="category-heading">{CATEGORY_LABELS[category]}</h3>
               <ul className="item-list">
-                {categoryItems.map((item) =>
+                {displayItems.map((item) =>
                   editingId === item.id ? (
                     <li key={item.id} className="item-row item-row-editing">
                       <input
@@ -113,8 +170,23 @@ export function ChecklistItems() {
                       </button>
                     </li>
                   ) : (
-                    <li key={item.id} className="item-row">
-                      {item.title}
+                    <li
+                      key={item.id}
+                      data-item-id={item.id}
+                      className={`item-row${draggingId === item.id ? ' dragging' : ''}`}
+                    >
+                      <span className="item-row-main">
+                        <span
+                          className="drag-handle"
+                          onPointerDown={(e) => handleDragStart(e, item, categoryItems)}
+                          onPointerMove={handleDragMove}
+                          onPointerUp={handleDragEnd}
+                          onPointerCancel={handleDragEnd}
+                        >
+                          ⠿
+                        </span>
+                        <span>{item.title}</span>
+                      </span>
                       <span className="item-row-actions">
                         <button className="btn-ghost" onClick={() => handleStartEdit(item)}>
                           수정

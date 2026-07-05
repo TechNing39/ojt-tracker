@@ -25,7 +25,7 @@ public class ChecklistItemController {
 
     @GetMapping
     public List<ChecklistItem> list() {
-        return repository.findAll();
+        return repository.findAllSorted();
     }
 
     public record CreateChecklistItemRequest(String title, Category category) {
@@ -39,8 +39,40 @@ public class ChecklistItemController {
         if (request.category() == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "category는 필수입니다."));
         }
-        ChecklistItem saved = repository.save(new ChecklistItem(request.title(), request.category()));
+        ChecklistItem item = new ChecklistItem(request.title(), request.category());
+        item.setSortOrder((int) repository.countByCategory(request.category()));
+        ChecklistItem saved = repository.save(item);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    public record ReorderChecklistItemsRequest(Category category, List<Long> orderedIds) {
+    }
+
+    @PatchMapping("/reorder")
+    public ResponseEntity<?> reorder(@RequestBody ReorderChecklistItemsRequest request) {
+        if (request.category() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "category는 필수입니다."));
+        }
+        if (request.orderedIds() == null || request.orderedIds().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "orderedIds는 필수입니다."));
+        }
+
+        List<ChecklistItem> categoryItems = repository.findByCategory(request.category());
+        Map<Long, ChecklistItem> itemsById =
+                categoryItems.stream().collect(java.util.stream.Collectors.toMap(ChecklistItem::getId, i -> i));
+
+        if (itemsById.size() != request.orderedIds().size() || !itemsById.keySet().containsAll(request.orderedIds())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "orderedIds가 해당 카테고리의 항목 구성과 일치하지 않습니다."));
+        }
+
+        List<Long> orderedIds = request.orderedIds();
+        for (int i = 0; i < orderedIds.size(); i++) {
+            itemsById.get(orderedIds.get(i)).setSortOrder(i);
+        }
+        repository.saveAll(itemsById.values());
+
+        return ResponseEntity.ok(repository.findAllSorted());
     }
 
     public record UpdateChecklistItemRequest(String title, Category category) {

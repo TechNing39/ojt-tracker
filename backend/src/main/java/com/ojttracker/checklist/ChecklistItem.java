@@ -22,6 +22,8 @@ public class ChecklistItem {
 
     private Instant createdAt;
 
+    private Integer sortOrder;
+
     protected ChecklistItem() {
     }
 
@@ -53,5 +55,13 @@ public class ChecklistItem {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }
