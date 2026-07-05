@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiDelete, apiGet, apiPost } from '../../api/http'
+import { apiDelete, apiGet, apiPatch, apiPost } from '../../api/http'
 import type { Category, ChecklistItem } from '../../types'
 import { CATEGORIES, CATEGORY_LABELS } from '../../types'
 
@@ -8,6 +8,9 @@ export function ChecklistItems() {
   const [newTitle, setNewTitle] = useState('')
   const [newCategory, setNewCategory] = useState<Category>('FLOOR')
   const [error, setError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editCategory, setEditCategory] = useState<Category>('FLOOR')
 
   const loadItems = () => {
     apiGet<ChecklistItem[]>('/checklist-items')
@@ -43,6 +46,30 @@ export function ChecklistItems() {
     }
   }
 
+  const handleStartEdit = (item: ChecklistItem) => {
+    setEditingId(item.id)
+    setEditTitle(item.title)
+    setEditCategory(item.category)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+  }
+
+  const handleSaveEdit = async (id: number) => {
+    if (!editTitle.trim()) return
+    try {
+      await apiPatch<ChecklistItem>(`/checklist-items/${id}`, {
+        title: editTitle.trim(),
+        category: editCategory,
+      })
+      setEditingId(null)
+      loadItems()
+    } catch {
+      setError('항목을 수정하지 못했습니다.')
+    }
+  }
+
   return (
     <div className="card">
       <h2>체크리스트 항목</h2>
@@ -57,14 +84,48 @@ export function ChecklistItems() {
             <div key={category} className="category-group">
               <h3 className="category-heading">{CATEGORY_LABELS[category]}</h3>
               <ul className="item-list">
-                {categoryItems.map((item) => (
-                  <li key={item.id} className="item-row">
-                    {item.title}
-                    <button className="btn-ghost" onClick={() => handleDelete(item.id, item.title)}>
-                      삭제
-                    </button>
-                  </li>
-                ))}
+                {categoryItems.map((item) =>
+                  editingId === item.id ? (
+                    <li key={item.id} className="item-row item-row-editing">
+                      <input
+                        className="text-input"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(item.id)}
+                      />
+                      <select
+                        className="select-input"
+                        style={{ flex: '0 0 100px' }}
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value as Category)}
+                      >
+                        {CATEGORIES.map((category) => (
+                          <option key={category} value={category}>
+                            {CATEGORY_LABELS[category]}
+                          </option>
+                        ))}
+                      </select>
+                      <button className="btn" onClick={() => handleSaveEdit(item.id)}>
+                        저장
+                      </button>
+                      <button className="btn-ghost" onClick={handleCancelEdit}>
+                        취소
+                      </button>
+                    </li>
+                  ) : (
+                    <li key={item.id} className="item-row">
+                      {item.title}
+                      <span className="item-row-actions">
+                        <button className="btn-ghost" onClick={() => handleStartEdit(item)}>
+                          수정
+                        </button>
+                        <button className="btn-ghost" onClick={() => handleDelete(item.id, item.title)}>
+                          삭제
+                        </button>
+                      </span>
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
           )

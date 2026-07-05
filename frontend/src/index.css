@@ -282,6 +282,16 @@ input {
   justify-content: flex-start;
 }
 
+.item-row-editing {
+  flex-wrap: wrap;
+}
+
+.item-row-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .item-row label {
   display: flex;
   align-items: center;

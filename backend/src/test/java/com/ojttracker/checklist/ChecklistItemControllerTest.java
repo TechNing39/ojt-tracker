@@ -3,6 +3,7 @@ package com.ojttracker.checklist;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,6 +54,32 @@ class ChecklistItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"제목\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateChecklistItem() throws Exception {
+        String response = mockMvc.perform(post("/api/checklist-items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"팝콘 제조\",\"category\":\"CONCESSION\"}"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        Long id = JsonPath.parse(response).read("$.id", Long.class);
+
+        mockMvc.perform(patch("/api/checklist-items/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"팝콘/음료 제조\",\"category\":\"FLOOR\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("팝콘/음료 제조"))
+                .andExpect(jsonPath("$.category").value("FLOOR"));
+    }
+
+    @Test
+    void updateNonexistentChecklistItemReturns404() throws Exception {
+        mockMvc.perform(patch("/api/checklist-items/999999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"제목\",\"category\":\"FLOOR\"}"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

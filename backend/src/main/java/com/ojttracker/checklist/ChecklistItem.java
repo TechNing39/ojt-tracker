@@ -46,4 +46,12 @@ public class ChecklistItem {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
 }
