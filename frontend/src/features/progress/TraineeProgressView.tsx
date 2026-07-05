@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../../api/http'
 import type { ProgressItem, Trainee } from '../../types'
 import { CATEGORIES, CATEGORY_LABELS } from '../../types'
-import { DashboardView } from '../dashboard/DashboardView'
 
 export function TraineeProgressView() {
   const [trainees, setTrainees] = useState<Trainee[]>([])
@@ -91,8 +90,6 @@ export function TraineeProgressView() {
 
   return (
     <>
-      <DashboardView />
-
       <div className="card">
         <h2>신입 명단</h2>
         {error && <p className="error-text">{error}</p>}
