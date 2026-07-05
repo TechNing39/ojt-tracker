@@ -125,6 +125,30 @@ export function ChecklistItems() {
     <div className="card">
       <h2>체크리스트 항목</h2>
       {error && <p className="error-text">{error}</p>}
+      <div className="field-row" style={{ flexWrap: 'wrap', marginTop: 0 }}>
+        <select
+          className="select-input"
+          style={{ flex: '0 0 100px' }}
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value as Category)}
+        >
+          {CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {CATEGORY_LABELS[category]}
+            </option>
+          ))}
+        </select>
+        <input
+          className="text-input"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          placeholder="새 체크리스트 항목"
+        />
+        <button className="btn" onClick={handleAdd}>
+          추가
+        </button>
+      </div>
       {items.length === 0 ? (
         <p className="empty-state">등록된 항목이 없습니다.</p>
       ) : (
@@ -203,30 +227,6 @@ export function ChecklistItems() {
           )
         })
       )}
-      <div className="field-row" style={{ flexWrap: 'wrap' }}>
-        <select
-          className="select-input"
-          style={{ flex: '0 0 100px' }}
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value as Category)}
-        >
-          {CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {CATEGORY_LABELS[category]}
-            </option>
-          ))}
-        </select>
-        <input
-          className="text-input"
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-          placeholder="새 체크리스트 항목"
-        />
-        <button className="btn" onClick={handleAdd}>
-          추가
-        </button>
-      </div>
     </div>
   )
 }
