@@ -157,7 +157,8 @@ input {
 
 /* Category groups */
 
-.category-group + .category-group {
+.category-group + .category-group,
+.field-row + .category-group {
   margin-top: 16px;
 }
 
