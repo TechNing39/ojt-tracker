@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../../api/http'
-import type { ProgressItem, Trainee } from '../../types'
+import type { Category, ProgressItem, Trainee } from '../../types'
 import { CATEGORIES, CATEGORY_LABELS } from '../../types'
 
 export function TraineeProgressView() {
@@ -10,6 +10,7 @@ export function TraineeProgressView() {
   const [noteDraft, setNoteDraft] = useState('')
   const [newName, setNewName] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [expandedCategories, setExpandedCategories] = useState<Set<Category>>(new Set())
 
   const loadProgress = (traineeId: number) => {
     apiGet<ProgressItem[]>(`/trainees/${traineeId}/progress`)
@@ -20,7 +21,20 @@ export function TraineeProgressView() {
   const handleSelectRow = (traineeId: number, trainee?: Trainee) => {
     setSelectedTraineeId(traineeId)
     setNoteDraft((trainee ?? trainees.find((t) => t.id === traineeId))?.note ?? '')
+    setExpandedCategories(new Set())
     loadProgress(traineeId)
+  }
+
+  const toggleCategory = (category: Category) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(category)) {
+        next.delete(category)
+      } else {
+        next.add(category)
+      }
+      return next
+    })
   }
 
   const loadTrainees = () => {
@@ -141,26 +155,37 @@ export function TraineeProgressView() {
           {CATEGORIES.map((category) => {
             const categoryItems = progress.filter((item) => item.category === category)
             if (categoryItems.length === 0) return null
+            const expanded = expandedCategories.has(category)
             return (
               <div key={category} className="category-group">
-                <h3 className="category-heading">{CATEGORY_LABELS[category]}</h3>
-                <ul className="item-list">
-                  {categoryItems.map((item) => (
-                    <li
-                      key={item.checklistItemId}
-                      className={`item-row checkable${item.completed ? ' completed' : ''}`}
-                    >
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={item.completed}
-                          onChange={() => handleToggleItem(item.checklistItemId)}
-                        />
-                        {item.title}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
+                <button
+                  type="button"
+                  className="category-toggle"
+                  aria-expanded={expanded}
+                  onClick={() => toggleCategory(category)}
+                >
+                  <span className="category-heading">{CATEGORY_LABELS[category]}</span>
+                  <span className={`category-arrow${expanded ? ' expanded' : ''}`}>▾</span>
+                </button>
+                {expanded && (
+                  <ul className="item-list">
+                    {categoryItems.map((item) => (
+                      <li
+                        key={item.checklistItemId}
+                        className={`item-row checkable${item.completed ? ' completed' : ''}`}
+                      >
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={item.completed}
+                            onChange={() => handleToggleItem(item.checklistItemId)}
+                          />
+                          {item.title}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )
           })}

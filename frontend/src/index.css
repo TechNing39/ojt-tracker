@@ -170,6 +170,34 @@ input {
   margin: 0 0 8px;
 }
 
+.category-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  margin-bottom: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.category-toggle .category-heading {
+  margin: 0;
+}
+
+.category-arrow {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.category-arrow.expanded {
+  transform: rotate(180deg);
+}
+
 /* Forms */
 
 .field-row {
