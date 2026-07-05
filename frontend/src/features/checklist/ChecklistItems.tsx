@@ -11,7 +11,6 @@ export function ChecklistItems() {
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editTitle, setEditTitle] = useState('')
-  const [editCategory, setEditCategory] = useState<Category>('FLOOR')
   const [dragCategory, setDragCategory] = useState<Category | null>(null)
   const [dragOrder, setDragOrder] = useState<number[]>([])
   const [draggingId, setDraggingId] = useState<number | null>(null)
@@ -53,7 +52,6 @@ export function ChecklistItems() {
   const handleStartEdit = (item: ChecklistItem) => {
     setEditingId(item.id)
     setEditTitle(item.title)
-    setEditCategory(item.category)
   }
 
   const handleCancelEdit = () => {
@@ -65,7 +63,6 @@ export function ChecklistItems() {
     try {
       await apiPatch<ChecklistItem>(`/checklist-items/${id}`, {
         title: editTitle.trim(),
-        category: editCategory,
       })
       setEditingId(null)
       loadItems()
@@ -174,18 +171,6 @@ export function ChecklistItems() {
                         onChange={(e) => setEditTitle(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(item.id)}
                       />
-                      <select
-                        className="select-input"
-                        style={{ flex: '0 0 100px' }}
-                        value={editCategory}
-                        onChange={(e) => setEditCategory(e.target.value as Category)}
-                      >
-                        {CATEGORIES.map((category) => (
-                          <option key={category} value={category}>
-                            {CATEGORY_LABELS[category]}
-                          </option>
-                        ))}
-                      </select>
                       <button className="btn" onClick={() => handleSaveEdit(item.id)}>
                         저장
                       </button>

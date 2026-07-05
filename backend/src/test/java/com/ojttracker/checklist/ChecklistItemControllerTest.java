@@ -57,7 +57,7 @@ class ChecklistItemControllerTest {
     }
 
     @Test
-    void updateChecklistItem() throws Exception {
+    void updateChecklistItemTitleKeepsCategory() throws Exception {
         String response = mockMvc.perform(post("/api/checklist-items")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"팝콘 제조\",\"category\":\"CONCESSION\"}"))
@@ -68,17 +68,17 @@ class ChecklistItemControllerTest {
 
         mockMvc.perform(patch("/api/checklist-items/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"팝콘/음료 제조\",\"category\":\"FLOOR\"}"))
+                        .content("{\"title\":\"팝콘/음료 제조\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("팝콘/음료 제조"))
-                .andExpect(jsonPath("$.category").value("FLOOR"));
+                .andExpect(jsonPath("$.category").value("CONCESSION"));
     }
 
     @Test
     void updateNonexistentChecklistItemReturns404() throws Exception {
         mockMvc.perform(patch("/api/checklist-items/999999")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"제목\",\"category\":\"FLOOR\"}"))
+                        .content("{\"title\":\"제목\"}"))
                 .andExpect(status().isNotFound());
     }
 

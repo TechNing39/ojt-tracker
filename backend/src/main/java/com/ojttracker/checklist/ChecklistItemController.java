@@ -75,7 +75,7 @@ public class ChecklistItemController {
         return ResponseEntity.ok(repository.findAllSorted());
     }
 
-    public record UpdateChecklistItemRequest(String title, Category category) {
+    public record UpdateChecklistItemRequest(String title) {
     }
 
     @PatchMapping("/{id}")
@@ -83,13 +83,9 @@ public class ChecklistItemController {
         if (request.title() == null || request.title().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("message", "title은 필수입니다."));
         }
-        if (request.category() == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "category는 필수입니다."));
-        }
         return repository.findById(id)
                 .map(item -> {
                     item.setTitle(request.title());
-                    item.setCategory(request.category());
                     return ResponseEntity.ok(repository.save(item));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
