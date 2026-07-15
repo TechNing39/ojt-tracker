@@ -14,15 +14,16 @@ export function ChecklistItems() {
   const [dragCategory, setDragCategory] = useState<Category | null>(null)
   const [dragOrder, setDragOrder] = useState<number[]>([])
   const [draggingId, setDraggingId] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const loadItems = () => {
-    apiGet<ChecklistItem[]>('/checklist-items')
+    return apiGet<ChecklistItem[]>('/checklist-items')
       .then(setItems)
       .catch(() => setError('목록을 불러오지 못했습니다.'))
   }
 
   useEffect(() => {
-    loadItems()
+    loadItems().finally(() => setIsLoading(false))
   }, [])
 
   const handleAdd = async () => {
@@ -146,7 +147,9 @@ export function ChecklistItems() {
           추가
         </button>
       </div>
-      {items.length === 0 ? (
+      {isLoading ? (
+        <p className="loading-state">불러오는 중...</p>
+      ) : items.length === 0 ? (
         <p className="empty-state">등록된 항목이 없습니다.</p>
       ) : (
         CATEGORIES.map((category) => {

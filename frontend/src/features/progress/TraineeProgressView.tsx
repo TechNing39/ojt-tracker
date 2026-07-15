@@ -11,6 +11,7 @@ export function TraineeProgressView() {
   const [newName, setNewName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [expandedCategories, setExpandedCategories] = useState<Set<Category>>(new Set())
+  const [isLoading, setIsLoading] = useState(true)
 
   const loadProgress = (traineeId: number) => {
     apiGet<ProgressItem[]>(`/trainees/${traineeId}/progress`)
@@ -52,6 +53,7 @@ export function TraineeProgressView() {
         }
       })
       .catch(() => setError('신입 목록을 불러오지 못했습니다.'))
+      .finally(() => setIsLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -107,7 +109,9 @@ export function TraineeProgressView() {
       <div className="card">
         <h2>신입 명단</h2>
         {error && <p className="error-text">{error}</p>}
-        {trainees.length === 0 ? (
+        {isLoading ? (
+          <p className="loading-state">불러오는 중...</p>
+        ) : trainees.length === 0 ? (
           <p className="empty-state">아직 등록된 신입이 없습니다.</p>
         ) : (
           <ul className="item-list">
