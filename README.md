@@ -14,11 +14,12 @@ OJT(온보딩)를 진행하는 트레이너와 받는 신입이 다수라 정보
 - 신입 등록/삭제, 특이사항 메모
 - 체크리스트 항목 관리 (플로어/매점/매표/마감/투썸 카테고리 구분, 추가/삭제)
 - 신입별 진행상황 체크
+- 초기 데이터 로딩 상태 표시 (백엔드 cold start 시 빈 화면처럼 보이는 문제 방지)
 
 ## 기술 스택
 - Backend: Java 17, Spring Boot, Spring Data JPA
 - Frontend: React, TypeScript, Vite
-- DB: PostgreSQL (배포), H2 (로컬 개발)
+- DB: PostgreSQL (Neon, 배포), H2 (로컬 개발)
 - 배포: Render(백엔드) + Vercel(프론트)
 
 ## 로컬 실행
