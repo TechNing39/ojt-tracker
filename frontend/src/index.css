@@ -96,6 +96,18 @@ input {
   text-align: center;
 }
 
+.header-logout {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
 .app-main {
   flex: 1;
   padding: 16px;
@@ -138,6 +150,33 @@ input {
 }
 
 .app-tab.active {
+  color: var(--accent);
+}
+
+.site-switcher {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px 0;
+  overflow-x: auto;
+  background: var(--surface);
+}
+
+.site-switcher-pill {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.site-switcher-pill.active {
+  background: var(--accent-bg);
+  border-color: var(--accent);
   color: var(--accent);
 }
 

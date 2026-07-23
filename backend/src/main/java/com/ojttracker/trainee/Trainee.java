@@ -21,16 +21,23 @@ public class Trainee {
 
     private Instant createdAt;
 
+    private Long siteId;
+
     protected Trainee() {
     }
 
-    public Trainee(String name) {
+    public Trainee(String name, Long siteId) {
         this.name = name;
+        this.siteId = siteId;
         this.createdAt = Instant.now();
     }
 
     public Long getId() {
         return id;
+    }
+
+    public Long getSiteId() {
+        return siteId;
     }
 
     public String getName() {

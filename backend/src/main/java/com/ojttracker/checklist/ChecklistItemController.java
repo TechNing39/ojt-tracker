@@ -1,7 +1,10 @@
 package com.ojttracker.checklist;
 
+import com.ojttracker.auth.SiteAccessGuard;
+import com.ojttracker.auth.TokenPrincipal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -18,29 +22,35 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChecklistItemController {
 
     private final ChecklistItemRepository repository;
+    private final SiteAccessGuard siteAccessGuard;
 
-    public ChecklistItemController(ChecklistItemRepository repository) {
+    public ChecklistItemController(ChecklistItemRepository repository, SiteAccessGuard siteAccessGuard) {
         this.repository = repository;
+        this.siteAccessGuard = siteAccessGuard;
     }
 
     @GetMapping
-    public List<ChecklistItem> list() {
-        return repository.findAllSorted();
+    public List<ChecklistItem> list(TokenPrincipal principal, @RequestParam(required = false) Long siteId) {
+        return repository.findAllSortedBySiteId(siteAccessGuard.resolveSiteId(principal, siteId));
     }
 
     public record CreateChecklistItemRequest(String title, Category category) {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody CreateChecklistItemRequest request) {
+    public ResponseEntity<?> create(
+            TokenPrincipal principal,
+            @RequestParam(required = false) Long siteId,
+            @RequestBody CreateChecklistItemRequest request) {
         if (request.title() == null || request.title().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("message", "title은 필수입니다."));
         }
         if (request.category() == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "category는 필수입니다."));
         }
-        ChecklistItem item = new ChecklistItem(request.title(), request.category());
-        item.setSortOrder((int) repository.countByCategory(request.category()));
+        Long resolvedSiteId = siteAccessGuard.resolveSiteId(principal, siteId);
+        ChecklistItem item = new ChecklistItem(request.title(), request.category(), resolvedSiteId);
+        item.setSortOrder((int) repository.countByCategoryAndSiteId(request.category(), resolvedSiteId));
         ChecklistItem saved = repository.save(item);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
@@ -49,7 +59,10 @@ public class ChecklistItemController {
     }
 
     @PatchMapping("/reorder")
-    public ResponseEntity<?> reorder(@RequestBody ReorderChecklistItemsRequest request) {
+    public ResponseEntity<?> reorder(
+            TokenPrincipal principal,
+            @RequestParam(required = false) Long siteId,
+            @RequestBody ReorderChecklistItemsRequest request) {
         if (request.category() == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "category는 필수입니다."));
         }
@@ -57,7 +70,8 @@ public class ChecklistItemController {
             return ResponseEntity.badRequest().body(Map.of("message", "orderedIds는 필수입니다."));
         }
 
-        List<ChecklistItem> categoryItems = repository.findByCategory(request.category());
+        Long resolvedSiteId = siteAccessGuard.resolveSiteId(principal, siteId);
+        List<ChecklistItem> categoryItems = repository.findByCategoryAndSiteId(request.category(), resolvedSiteId);
         Map<Long, ChecklistItem> itemsById =
                 categoryItems.stream().collect(java.util.stream.Collectors.toMap(ChecklistItem::getId, i -> i));
 
@@ -72,18 +86,19 @@ public class ChecklistItemController {
         }
         repository.saveAll(itemsById.values());
 
-        return ResponseEntity.ok(repository.findAllSorted());
+        return ResponseEntity.ok(repository.findAllSortedBySiteId(resolvedSiteId));
     }
 
     public record UpdateChecklistItemRequest(String title) {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UpdateChecklistItemRequest request) {
+    public ResponseEntity<?> update(
+            TokenPrincipal principal, @PathVariable Long id, @RequestBody UpdateChecklistItemRequest request) {
         if (request.title() == null || request.title().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("message", "title은 필수입니다."));
         }
-        return repository.findById(id)
+        return findOwned(principal, id)
                 .map(item -> {
                     item.setTitle(request.title());
                     return ResponseEntity.ok(repository.save(item));
@@ -92,11 +107,15 @@ public class ChecklistItemController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
+    public ResponseEntity<?> delete(TokenPrincipal principal, @PathVariable Long id) {
+        if (findOwned(principal, id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         repository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private Optional<ChecklistItem> findOwned(TokenPrincipal principal, Long id) {
+        return principal.isAdmin() ? repository.findById(id) : repository.findByIdAndSiteId(id, principal.siteId());
     }
 }
