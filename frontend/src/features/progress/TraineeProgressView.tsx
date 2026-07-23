@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../../api/http'
 import type { Category, ProgressItem, Trainee } from '../../types'
 import { CATEGORIES, CATEGORY_LABELS } from '../../types'
+import { useAuth } from '../../auth/AuthContext'
 
 export function TraineeProgressView() {
+  const { role, effectiveSiteId } = useAuth()
+  const siteQuery = role === 'ADMIN' && effectiveSiteId ? `?siteId=${effectiveSiteId}` : ''
+
   const [trainees, setTrainees] = useState<Trainee[]>([])
   const [selectedTraineeId, setSelectedTraineeId] = useState<number | null>(null)
   const [progress, setProgress] = useState<ProgressItem[]>([])
@@ -39,13 +43,18 @@ export function TraineeProgressView() {
   }
 
   const loadTrainees = () => {
-    apiGet<Trainee[]>('/trainees')
+    apiGet<Trainee[]>(`/trainees${siteQuery}`)
       .then(setTrainees)
       .catch(() => setError('신입 목록을 불러오지 못했습니다.'))
   }
 
   useEffect(() => {
-    apiGet<Trainee[]>('/trainees')
+    if (role === 'ADMIN' && !effectiveSiteId) return
+
+    setIsLoading(true)
+    setSelectedTraineeId(null)
+    setProgress([])
+    apiGet<Trainee[]>(`/trainees${siteQuery}`)
       .then((data) => {
         setTrainees(data)
         if (data.length > 0) {
@@ -55,12 +64,12 @@ export function TraineeProgressView() {
       .catch(() => setError('신입 목록을 불러오지 못했습니다.'))
       .finally(() => setIsLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [effectiveSiteId])
 
   const handleAddTrainee = async () => {
     if (!newName.trim()) return
     try {
-      await apiPost<Trainee>('/trainees', { name: newName.trim() })
+      await apiPost<Trainee>(`/trainees${siteQuery}`, { name: newName.trim() })
       setNewName('')
       loadTrainees()
     } catch {

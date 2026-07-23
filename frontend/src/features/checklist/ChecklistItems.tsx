@@ -3,8 +3,12 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../../api/http'
 import type { Category, ChecklistItem } from '../../types'
 import { CATEGORIES, CATEGORY_LABELS } from '../../types'
+import { useAuth } from '../../auth/AuthContext'
 
 export function ChecklistItems() {
+  const { role, effectiveSiteId } = useAuth()
+  const siteQuery = role === 'ADMIN' && effectiveSiteId ? `?siteId=${effectiveSiteId}` : ''
+
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [newTitle, setNewTitle] = useState('')
   const [newCategory, setNewCategory] = useState<Category>('FLOOR')
@@ -17,19 +21,22 @@ export function ChecklistItems() {
   const [isLoading, setIsLoading] = useState(true)
 
   const loadItems = () => {
-    return apiGet<ChecklistItem[]>('/checklist-items')
+    return apiGet<ChecklistItem[]>(`/checklist-items${siteQuery}`)
       .then(setItems)
       .catch(() => setError('목록을 불러오지 못했습니다.'))
   }
 
   useEffect(() => {
+    if (role === 'ADMIN' && !effectiveSiteId) return
+    setIsLoading(true)
     loadItems().finally(() => setIsLoading(false))
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveSiteId])
 
   const handleAdd = async () => {
     if (!newTitle.trim()) return
     try {
-      await apiPost<ChecklistItem>('/checklist-items', {
+      await apiPost<ChecklistItem>(`/checklist-items${siteQuery}`, {
         title: newTitle.trim(),
         category: newCategory,
       })
@@ -111,7 +118,7 @@ export function ChecklistItems() {
     setDragCategory(null)
     setDragOrder([])
     try {
-      await apiPatch('/checklist-items/reorder', { category, orderedIds })
+      await apiPatch(`/checklist-items/reorder${siteQuery}`, { category, orderedIds })
       loadItems()
     } catch {
       setError('순서를 변경하지 못했습니다.')

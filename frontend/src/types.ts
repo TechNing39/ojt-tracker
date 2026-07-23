@@ -15,6 +15,7 @@ export interface ChecklistItem {
   title: string
   category: Category
   createdAt: string
+  siteId: number
 }
 
 export interface Trainee {
@@ -22,6 +23,7 @@ export interface Trainee {
   name: string
   note: string | null
   createdAt: string
+  siteId: number
 }
 
 export interface ProgressItem {
@@ -31,4 +33,16 @@ export interface ProgressItem {
   completed: boolean
   completedAt: string | null
 }
+
+export type SiteCode = 'JUNGGYE' | 'SANGBONG' | 'BANGHAK' | 'SUYU' | 'MIA'
+
+export const SITES: { code: SiteCode; name: string }[] = [
+  { code: 'JUNGGYE', name: '중계' },
+  { code: 'SANGBONG', name: '상봉' },
+  { code: 'BANGHAK', name: '방학' },
+  { code: 'SUYU', name: '수유' },
+  { code: 'MIA', name: '미아' },
+]
+
+export type Role = 'SITE' | 'ADMIN'
 

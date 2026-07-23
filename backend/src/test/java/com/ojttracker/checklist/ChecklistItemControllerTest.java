@@ -9,6 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.ojttracker.auth.Role;
+import com.ojttracker.auth.SiteCode;
+import com.ojttracker.auth.SiteRepository;
+import com.ojttracker.auth.TokenService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,16 +30,34 @@ class ChecklistItemControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private TokenService tokenService;
+
+    @Autowired
+    private SiteRepository siteRepository;
+
+    private Long junggyeId;
+
+    @BeforeEach
+    void setUp() {
+        junggyeId = siteRepository.findByCode(SiteCode.JUNGGYE.name()).orElseThrow().getId();
+    }
+
+    private String adminAuth() {
+        return "Bearer " + tokenService.issueToken(Role.ADMIN, null);
+    }
+
     @Test
     void createAndListChecklistItem() throws Exception {
-        mockMvc.perform(post("/api/checklist-items")
+        mockMvc.perform(post("/api/checklist-items?siteId=" + junggyeId)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"포스 사용법\",\"category\":\"TICKETING\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("포스 사용법"))
                 .andExpect(jsonPath("$.category").value("TICKETING"));
 
-        mockMvc.perform(get("/api/checklist-items"))
+        mockMvc.perform(get("/api/checklist-items?siteId=" + junggyeId).header("Authorization", adminAuth()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].title").value("포스 사용법"));
@@ -42,7 +65,8 @@ class ChecklistItemControllerTest {
 
     @Test
     void createWithBlankTitleReturns400() throws Exception {
-        mockMvc.perform(post("/api/checklist-items")
+        mockMvc.perform(post("/api/checklist-items?siteId=" + junggyeId)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"\",\"category\":\"FLOOR\"}"))
                 .andExpect(status().isBadRequest());
@@ -50,7 +74,8 @@ class ChecklistItemControllerTest {
 
     @Test
     void createWithoutCategoryReturns400() throws Exception {
-        mockMvc.perform(post("/api/checklist-items")
+        mockMvc.perform(post("/api/checklist-items?siteId=" + junggyeId)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"제목\"}"))
                 .andExpect(status().isBadRequest());
@@ -58,7 +83,8 @@ class ChecklistItemControllerTest {
 
     @Test
     void updateChecklistItemTitleKeepsCategory() throws Exception {
-        String response = mockMvc.perform(post("/api/checklist-items")
+        String response = mockMvc.perform(post("/api/checklist-items?siteId=" + junggyeId)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"팝콘 제조\",\"category\":\"CONCESSION\"}"))
                 .andReturn()
@@ -67,6 +93,7 @@ class ChecklistItemControllerTest {
         Long id = JsonPath.parse(response).read("$.id", Long.class);
 
         mockMvc.perform(patch("/api/checklist-items/" + id)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"팝콘/음료 제조\"}"))
                 .andExpect(status().isOk())
@@ -77,6 +104,7 @@ class ChecklistItemControllerTest {
     @Test
     void updateNonexistentChecklistItemReturns404() throws Exception {
         mockMvc.perform(patch("/api/checklist-items/999999")
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"제목\"}"))
                 .andExpect(status().isNotFound());
@@ -88,7 +116,8 @@ class ChecklistItemControllerTest {
         Long second = createItem("두번째", "TICKETING");
         Long third = createItem("세번째", "TICKETING");
 
-        mockMvc.perform(patch("/api/checklist-items/reorder")
+        mockMvc.perform(patch("/api/checklist-items/reorder?siteId=" + junggyeId)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
                                 "{\"category\":\"TICKETING\",\"orderedIds\":[" + third + "," + first + "," + second
@@ -104,14 +133,16 @@ class ChecklistItemControllerTest {
         createItem("첫번째", "CLOSING");
         createItem("두번째", "CLOSING");
 
-        mockMvc.perform(patch("/api/checklist-items/reorder")
+        mockMvc.perform(patch("/api/checklist-items/reorder?siteId=" + junggyeId)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"category\":\"CLOSING\",\"orderedIds\":[999999]}"))
                 .andExpect(status().isBadRequest());
     }
 
     private Long createItem(String title, String category) throws Exception {
-        String response = mockMvc.perform(post("/api/checklist-items")
+        String response = mockMvc.perform(post("/api/checklist-items?siteId=" + junggyeId)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"" + title + "\",\"category\":\"" + category + "\"}"))
                 .andReturn()
@@ -122,7 +153,8 @@ class ChecklistItemControllerTest {
 
     @Test
     void deleteChecklistItem() throws Exception {
-        String response = mockMvc.perform(post("/api/checklist-items")
+        String response = mockMvc.perform(post("/api/checklist-items?siteId=" + junggyeId)
+                        .header("Authorization", adminAuth())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"매점 운영\",\"category\":\"CONCESSION\"}"))
                 .andReturn()
@@ -130,8 +162,10 @@ class ChecklistItemControllerTest {
                 .getContentAsString();
         Long id = JsonPath.parse(response).read("$.id", Long.class);
 
-        mockMvc.perform(delete("/api/checklist-items/" + id)).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/checklist-items/" + id).header("Authorization", adminAuth()))
+                .andExpect(status().isNoContent());
 
-        mockMvc.perform(delete("/api/checklist-items/" + id)).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/checklist-items/" + id).header("Authorization", adminAuth()))
+                .andExpect(status().isNotFound());
     }
 }

@@ -1,10 +1,13 @@
 package com.ojttracker.progress;
 
+import com.ojttracker.auth.TokenPrincipal;
 import com.ojttracker.checklist.ChecklistItem;
 import com.ojttracker.checklist.ChecklistItemRepository;
+import com.ojttracker.trainee.Trainee;
 import com.ojttracker.trainee.TraineeRepository;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,12 +33,13 @@ public class TraineeProgressController {
     }
 
     @GetMapping
-    public ResponseEntity<?> list(@PathVariable Long traineeId) {
-        if (!traineeRepository.existsById(traineeId)) {
+    public ResponseEntity<?> list(TokenPrincipal principal, @PathVariable Long traineeId) {
+        Optional<Trainee> trainee = findOwnedTrainee(principal, traineeId);
+        if (trainee.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        List<ChecklistItem> items = checklistItemRepository.findAllSorted();
+        List<ChecklistItem> items = checklistItemRepository.findAllSortedBySiteId(trainee.get().getSiteId());
         Map<Long, TraineeProgress> progressByItemId = progressRepository.findByTraineeId(traineeId).stream()
                 .collect(java.util.stream.Collectors.toMap(TraineeProgress::getChecklistItemId, p -> p));
 
@@ -52,11 +56,12 @@ public class TraineeProgressController {
     }
 
     @PatchMapping("/{itemId}")
-    public ResponseEntity<?> toggle(@PathVariable Long traineeId, @PathVariable Long itemId) {
-        if (!traineeRepository.existsById(traineeId)) {
+    public ResponseEntity<?> toggle(TokenPrincipal principal, @PathVariable Long traineeId, @PathVariable Long itemId) {
+        Optional<Trainee> trainee = findOwnedTrainee(principal, traineeId);
+        if (trainee.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        if (!checklistItemRepository.existsById(itemId)) {
+        if (checklistItemRepository.findByIdAndSiteId(itemId, trainee.get().getSiteId()).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
@@ -67,5 +72,11 @@ public class TraineeProgressController {
         TraineeProgress saved = progressRepository.save(progress);
 
         return ResponseEntity.ok(saved);
+    }
+
+    private Optional<Trainee> findOwnedTrainee(TokenPrincipal principal, Long traineeId) {
+        return principal.isAdmin()
+                ? traineeRepository.findById(traineeId)
+                : traineeRepository.findByIdAndSiteId(traineeId, principal.siteId());
     }
 }

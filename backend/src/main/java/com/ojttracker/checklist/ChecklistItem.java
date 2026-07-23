@@ -24,17 +24,24 @@ public class ChecklistItem {
 
     private Integer sortOrder;
 
+    private Long siteId;
+
     protected ChecklistItem() {
     }
 
-    public ChecklistItem(String title, Category category) {
+    public ChecklistItem(String title, Category category, Long siteId) {
         this.title = title;
         this.category = category;
+        this.siteId = siteId;
         this.createdAt = Instant.now();
     }
 
     public Long getId() {
         return id;
+    }
+
+    public Long getSiteId() {
+        return siteId;
     }
 
     public String getTitle() {

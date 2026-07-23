@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { ChecklistItems } from './features/checklist/ChecklistItems'
 import { TraineeProgressView } from './features/progress/TraineeProgressView'
+import { useAuth } from './auth/AuthContext'
+import { LoginScreen } from './auth/LoginScreen'
+import { SiteSwitcher } from './auth/SiteSwitcher'
 
 type Tab = 'progress' | 'checklist'
 
@@ -11,12 +14,29 @@ const TABS: { key: Tab; icon: string; label: string }[] = [
 
 function App() {
   const [tab, setTab] = useState<Tab>('progress')
+  const { role, siteName, logout } = useAuth()
+
+  if (!role) {
+    return (
+      <>
+        <header className="app-header">
+          <h1>OJT Tracker</h1>
+        </header>
+        <LoginScreen />
+      </>
+    )
+  }
 
   return (
     <>
       <header className="app-header">
-        <h1>OJT Tracker</h1>
+        <h1>OJT Tracker{siteName ? ` · ${siteName}` : role === 'ADMIN' ? ' · 관리자' : ''}</h1>
+        <button className="header-logout" onClick={logout}>
+          로그아웃
+        </button>
       </header>
+
+      {role === 'ADMIN' && <SiteSwitcher />}
 
       <main className="app-main">
         {tab === 'progress' && <TraineeProgressView />}
