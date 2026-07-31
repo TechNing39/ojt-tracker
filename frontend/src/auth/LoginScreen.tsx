@@ -11,8 +11,6 @@ const TEMP_PIN_HINTS: Record<SiteCode, string> = {
   SUYU: '4444',
   MIA: '5555',
 }
-const TEMP_ADMIN_PIN_HINT = '0000'
-
 export function LoginScreen() {
   const { login, loginAdmin } = useAuth()
   const [mode, setMode] = useState<'site' | 'admin'>('site')
@@ -117,7 +115,6 @@ export function LoginScreen() {
                 로그인
               </button>
             </div>
-            <p className="empty-state">(임시) PIN: {TEMP_ADMIN_PIN_HINT}</p>
             <div className="field-row">
               <button
                 className="btn-ghost"
