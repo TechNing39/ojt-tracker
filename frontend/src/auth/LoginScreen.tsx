@@ -89,6 +89,9 @@ export function LoginScreen() {
                 로그인
               </button>
             </div>
+            {isSubmitting && (
+              <p className="loading-state">로그인 중... 서버가 깨어나는 중이면 최대 1분 정도 걸릴 수 있어요.</p>
+            )}
             <p className="empty-state">(임시) PIN: {TEMP_PIN_HINTS[selectedSite]}</p>
             <div className="field-row">
               <button className="btn-ghost" onClick={handleBack}>
@@ -117,6 +120,9 @@ export function LoginScreen() {
                 로그인
               </button>
             </div>
+            {isSubmitting && (
+              <p className="loading-state">로그인 중... 서버가 깨어나는 중이면 최대 1분 정도 걸릴 수 있어요.</p>
+            )}
             <p className="empty-state">(임시) PIN: {TEMP_ADMIN_PIN_HINT}</p>
             <div className="field-row">
               <button
