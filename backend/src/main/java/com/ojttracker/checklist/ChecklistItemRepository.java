@@ -21,6 +21,4 @@ public interface ChecklistItemRepository extends JpaRepository<ChecklistItem, Lo
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE ChecklistItem c SET c.siteId = :siteId WHERE c.siteId IS NULL")
     int backfillSiteId(@Param("siteId") Long siteId);
-
-    void deleteBySiteId(Long siteId);
 }
