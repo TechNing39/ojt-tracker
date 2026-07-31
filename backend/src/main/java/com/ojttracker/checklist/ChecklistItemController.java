@@ -1,6 +1,7 @@
 package com.ojttracker.checklist;
 
 import com.ojttracker.auth.SiteAccessGuard;
+import com.ojttracker.auth.SiteRepository;
 import com.ojttracker.auth.TokenPrincipal;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +24,13 @@ public class ChecklistItemController {
 
     private final ChecklistItemRepository repository;
     private final SiteAccessGuard siteAccessGuard;
+    private final SiteRepository siteRepository;
 
-    public ChecklistItemController(ChecklistItemRepository repository, SiteAccessGuard siteAccessGuard) {
+    public ChecklistItemController(
+            ChecklistItemRepository repository, SiteAccessGuard siteAccessGuard, SiteRepository siteRepository) {
         this.repository = repository;
         this.siteAccessGuard = siteAccessGuard;
+        this.siteRepository = siteRepository;
     }
 
     @GetMapping
@@ -41,6 +45,7 @@ public class ChecklistItemController {
     public ResponseEntity<?> create(
             TokenPrincipal principal,
             @RequestParam(required = false) Long siteId,
+            @RequestParam(required = false, defaultValue = "false") boolean applyToAllSites,
             @RequestBody CreateChecklistItemRequest request) {
         if (request.title() == null || request.title().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("message", "title은 필수입니다."));
@@ -48,11 +53,27 @@ public class ChecklistItemController {
         if (request.category() == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "category는 필수입니다."));
         }
+
+        if (applyToAllSites) {
+            if (!principal.isAdmin()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message", "관리자만 전체 지점에 추가할 수 있습니다."));
+            }
+            List<ChecklistItem> created = siteRepository.findAll().stream()
+                    .map(site -> createItemForSite(request, site.getId()))
+                    .toList();
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        }
+
         Long resolvedSiteId = siteAccessGuard.resolveSiteId(principal, siteId);
-        ChecklistItem item = new ChecklistItem(request.title(), request.category(), resolvedSiteId);
-        item.setSortOrder((int) repository.countByCategoryAndSiteId(request.category(), resolvedSiteId));
-        ChecklistItem saved = repository.save(item);
+        ChecklistItem saved = createItemForSite(request, resolvedSiteId);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    private ChecklistItem createItemForSite(CreateChecklistItemRequest request, Long siteId) {
+        ChecklistItem item = new ChecklistItem(request.title(), request.category(), siteId);
+        item.setSortOrder((int) repository.countByCategoryAndSiteId(request.category(), siteId));
+        return repository.save(item);
     }
 
     public record ReorderChecklistItemsRequest(Category category, List<Long> orderedIds) {
