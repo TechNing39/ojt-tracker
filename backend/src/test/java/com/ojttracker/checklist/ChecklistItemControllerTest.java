@@ -47,6 +47,10 @@ class ChecklistItemControllerTest {
         return "Bearer " + tokenService.issueToken(Role.ADMIN, null);
     }
 
+    private String siteAuth(Long siteId) {
+        return "Bearer " + tokenService.issueToken(Role.SITE, siteId);
+    }
+
     @Test
     void createAndListChecklistItem() throws Exception {
         mockMvc.perform(post("/api/checklist-items?siteId=" + junggyeId)
@@ -149,6 +153,29 @@ class ChecklistItemControllerTest {
                 .getResponse()
                 .getContentAsString();
         return JsonPath.parse(response).read("$.id", Long.class);
+    }
+
+    @Test
+    void createWithApplyToAllSitesCreatesItemInEverySite() throws Exception {
+        mockMvc.perform(post("/api/checklist-items?applyToAllSites=true")
+                        .header("Authorization", adminAuth())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"전체 지점 공통 항목\",\"category\":\"FLOOR\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$", hasSize(5)));
+
+        mockMvc.perform(get("/api/checklist-items?siteId=" + junggyeId).header("Authorization", adminAuth()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("전체 지점 공통 항목"));
+    }
+
+    @Test
+    void createWithApplyToAllSitesAsSiteRoleReturns403() throws Exception {
+        mockMvc.perform(post("/api/checklist-items?applyToAllSites=true")
+                        .header("Authorization", siteAuth(junggyeId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"전체 지점 공통 항목\",\"category\":\"FLOOR\"}"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

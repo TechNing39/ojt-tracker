@@ -12,6 +12,7 @@ export function ChecklistItems() {
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [newTitle, setNewTitle] = useState('')
   const [newCategory, setNewCategory] = useState<Category>('FLOOR')
+  const [applyToAllSites, setApplyToAllSites] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editTitle, setEditTitle] = useState('')
@@ -36,10 +37,17 @@ export function ChecklistItems() {
   const handleAdd = async () => {
     if (!newTitle.trim()) return
     try {
-      await apiPost<ChecklistItem>(`/checklist-items${siteQuery}`, {
-        title: newTitle.trim(),
-        category: newCategory,
-      })
+      if (role === 'ADMIN' && applyToAllSites) {
+        await apiPost<ChecklistItem[]>('/checklist-items?applyToAllSites=true', {
+          title: newTitle.trim(),
+          category: newCategory,
+        })
+      } else {
+        await apiPost<ChecklistItem>(`/checklist-items${siteQuery}`, {
+          title: newTitle.trim(),
+          category: newCategory,
+        })
+      }
       setNewTitle('')
       loadItems()
     } catch {
@@ -154,6 +162,16 @@ export function ChecklistItems() {
           추가
         </button>
       </div>
+      {role === 'ADMIN' && (
+        <label className="field-row" style={{ marginTop: 0, alignItems: 'center', gap: 6 }}>
+          <input
+            type="checkbox"
+            checked={applyToAllSites}
+            onChange={(e) => setApplyToAllSites(e.target.checked)}
+          />
+          <span>모든 지점에 추가</span>
+        </label>
+      )}
       {isLoading ? (
         <p className="loading-state">불러오는 중...</p>
       ) : items.length === 0 ? (
