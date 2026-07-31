@@ -11,8 +11,6 @@ const TEMP_PIN_HINTS: Record<SiteCode, string> = {
   SUYU: '4444',
   MIA: '5555',
 }
-const TEMP_ADMIN_PIN_HINT = '0000'
-
 function loadingMessage(elapsedSeconds: number): string {
   if (elapsedSeconds >= 90) {
     return `거의 다 됐어요, 최대 3분 정도 걸릴 수 있어요. (${elapsedSeconds}초 경과)`
@@ -142,7 +140,6 @@ export function LoginScreen() {
               </button>
             </div>
             {isSubmitting && <p className="loading-state">{loadingMessage(elapsedSeconds)}</p>}
-            <p className="empty-state">(임시) PIN: {TEMP_ADMIN_PIN_HINT}</p>
             <div className="field-row">
               <button
                 className="btn-ghost"
