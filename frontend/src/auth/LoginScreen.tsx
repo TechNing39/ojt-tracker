@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from './AuthContext'
 import { SITES } from '../types'
 import type { SiteCode } from '../types'
@@ -11,6 +11,16 @@ const TEMP_PIN_HINTS: Record<SiteCode, string> = {
   SUYU: '4444',
   MIA: '5555',
 }
+function loadingMessage(elapsedSeconds: number): string {
+  if (elapsedSeconds >= 90) {
+    return `거의 다 됐어요, 최대 3분 정도 걸릴 수 있어요. (${elapsedSeconds}초 경과)`
+  }
+  if (elapsedSeconds >= 30) {
+    return `서버를 깨우는 중이에요, 조금만 더 기다려주세요. (${elapsedSeconds}초 경과)`
+  }
+  return `로그인 중... (${elapsedSeconds}초 경과)`
+}
+
 export function LoginScreen() {
   const { login, loginAdmin } = useAuth()
   const [mode, setMode] = useState<'site' | 'admin'>('site')
@@ -18,6 +28,19 @@ export function LoginScreen() {
   const [pin, setPin] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+
+  useEffect(() => {
+    if (!isSubmitting) {
+      setElapsedSeconds(0)
+      return
+    }
+    const startedAt = Date.now()
+    const intervalId = window.setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000))
+    }, 1000)
+    return () => window.clearInterval(intervalId)
+  }, [isSubmitting])
 
   const handleBack = () => {
     setSelectedSite(null)
@@ -87,6 +110,7 @@ export function LoginScreen() {
                 로그인
               </button>
             </div>
+            {isSubmitting && <p className="loading-state">{loadingMessage(elapsedSeconds)}</p>}
             <p className="empty-state">(임시) PIN: {TEMP_PIN_HINTS[selectedSite]}</p>
             <div className="field-row">
               <button className="btn-ghost" onClick={handleBack}>
@@ -115,6 +139,7 @@ export function LoginScreen() {
                 로그인
               </button>
             </div>
+            {isSubmitting && <p className="loading-state">{loadingMessage(elapsedSeconds)}</p>}
             <div className="field-row">
               <button
                 className="btn-ghost"
