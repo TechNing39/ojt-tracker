@@ -50,7 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthToken(stored?.token ?? null)
     return stored
   })
-  const [adminSelectedSiteId, setAdminSelectedSiteId] = useState<number | null>(null)
+  const [adminSelectedSiteId, setAdminSelectedSiteId] = useState<number | null>(() => {
+    const stored = readStoredAuth()
+    return stored?.role === 'ADMIN' && stored.sites && stored.sites.length > 0 ? stored.sites[0].id : null
+  })
 
   const logout = () => {
     localStorage.removeItem(STORAGE_KEY)
