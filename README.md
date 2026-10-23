@@ -19,7 +19,7 @@ OJT(온보딩)를 진행하는 트레이너와 받는 신입이 다수라 정보
 ## 기술 스택
 - Backend: Java 17, Spring Boot, Spring Data JPA
 - Frontend: React, TypeScript, Vite
-- DB: PostgreSQL (Neon, 배포), H2 (로컬 개발)
+- DB: TiDB Cloud Starter (MySQL 호환, 배포), H2 (로컬 개발)
 - 배포: Render(백엔드) + Vercel(프론트)
 
 ## 로컬 실행
