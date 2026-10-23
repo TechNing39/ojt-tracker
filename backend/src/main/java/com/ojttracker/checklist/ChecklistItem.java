@@ -7,6 +7,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.time.Instant;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 public class ChecklistItem {
@@ -17,7 +19,9 @@ public class ChecklistItem {
 
     private String title;
 
+    // MySQL(TiDB)에서 Hibernate 기본값인 native ENUM 컬럼 대신 varchar로 저장 — ddl-auto=update는 ENUM 값 목록을 갱신하지 않아 카테고리 추가 시 저장이 실패하기 때문
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private Category category;
 
     private Instant createdAt;
